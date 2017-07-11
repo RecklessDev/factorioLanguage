@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26430.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "factorioLanguage", "factorioLanguage.csproj", "{1C55794C-F566-4DB5-BF5A-FA3EA25C4745}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FactorioLangaugeUnitTests", "..\FactorioLangaugeUnitTests\FactorioLangaugeUnitTests.csproj", "{7C2D877C-0F79-44F0-AD2B-6B532DB22CA7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{1C55794C-F566-4DB5-BF5A-FA3EA25C4745}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C55794C-F566-4DB5-BF5A-FA3EA25C4745}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C55794C-F566-4DB5-BF5A-FA3EA25C4745}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C2D877C-0F79-44F0-AD2B-6B532DB22CA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C2D877C-0F79-44F0-AD2B-6B532DB22CA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C2D877C-0F79-44F0-AD2B-6B532DB22CA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C2D877C-0F79-44F0-AD2B-6B532DB22CA7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
