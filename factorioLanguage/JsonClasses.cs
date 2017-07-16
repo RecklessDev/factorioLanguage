@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using System.Numerics;
 
 namespace factorioLanguage.JsonClasses
 {
@@ -35,6 +36,16 @@ namespace factorioLanguage.JsonClasses
     {
         public float x { get; set; }
         public float y { get; set; }
+
+        public static implicit operator Position(Vector2 v2)
+        {
+            return new Position { x = v2.X, y = v2.Y };
+        }
+
+        public static implicit operator Vector2(Position pos)
+        {
+            return new Vector2 { X = pos.x, Y = pos.y };
+        }
     }
 
     class ArithmeticConditions
