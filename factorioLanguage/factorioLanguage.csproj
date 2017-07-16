@@ -7,7 +7,7 @@
     <ProjectGuid>{1C55794C-F566-4DB5-BF5A-FA3EA25C4745}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>factorioLanguage</RootNamespace>
+    <RootNamespace>Factorio</RootNamespace>
     <AssemblyName>factorioLanguage</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -61,6 +61,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rails.cs" />
+    <Compile Include="Rail\RailEntities.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -68,6 +69,7 @@
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

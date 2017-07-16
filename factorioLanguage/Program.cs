@@ -181,7 +181,8 @@ namespace factorioLanguage
 
             //Rail Factory
             //File.WriteAllText("TestTurnSegment.txt", (Rails.RailFactory.TestTurnSegment()));
-            File.WriteAllText("TestCurvedRails.txt", (Rails.RailFactory.TestCurvedRails()));
+            File.WriteAllText("TestCurvedRails.txt", (Rails.RailFactory.TestCurvedRails())); 
+            //File.WriteAllText("TestClockwiseGeneration.txt", (Rails.RailFactory.TestClockwiseShit()));
         }
     }
 }

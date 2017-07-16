@@ -219,7 +219,21 @@ namespace factorioLanguage
                 return newAngle;
             }
 
+            IRailSegment halfDiagonalSegment { get; set; }
+
             public CurvedRailSegment(Vector2 startPos, int startAngle, TurnDirection direction)
+            {
+                if (startAngle == 45 || startAngle == 135 || startAngle == 225 || startAngle == 315)
+                {
+                    var offset = new Vector2(-4, 0).Rotate(startAngle);
+                    var diagonalSegment = new StraightRailSegment(startPos, startPos + offset, false, true);
+                    halfDiagonalSegment = diagonalSegment;
+                }
+
+                Init(startPos, startAngle, direction);
+            }
+
+            private void Init(Vector2 startPos, int startAngle, TurnDirection direction)
             {
                 startAngle = normalizeAngle(startAngle);
                 Tuple<Vector2, Vector2> offsetTuple;
@@ -235,17 +249,12 @@ namespace factorioLanguage
                     }
                     else
                     {
-                        var newAngle = (startAngle - 45) % 360;
-                        if (newAngle < 0) newAngle += 360;
-
-                        var offsets = angleTurnOffsets[newAngle];
-                        offsetTuple = Tuple.Create(Vector2.Multiply(offsets.Item2 - offsets.Item1, -1), Vector2.Multiply(offsets.Item2, -1));
-
-                        Direction = angleToDirection[newAngle];
-
-                        FromPosition = startPos;
-                        Center = startPos + offsetTuple.Item1;
-                        EndPosition = startPos + offsetTuple.Item2;
+                        Init(startPos, startAngle - 45, TurnDirection.Clockwise);
+                        TranslateSegment(Vector2.Multiply(EndPosition - FromPosition, -1));
+                        //switch ends
+                        var aux = EndPosition;
+                        EndPosition = FromPosition;
+                        FromPosition = aux;
                     }
                 }
             }
@@ -283,7 +292,10 @@ namespace factorioLanguage
 
             public List<Entity> GetRailEntities()
             {
-                return new List<Entity> { MakeEntity() };
+                var entities = new List<Entity> { MakeEntity() };
+                if (halfDiagonalSegment != null)
+                    entities.AddRange(halfDiagonalSegment.GetRailEntities());
+                return entities;
             }
 
             public Vector2 FromPosition { get; private set; }
@@ -325,9 +337,14 @@ namespace factorioLanguage
                 { new Vector2(-2, -2),  ConnectionDirection.BackDiagonal }
             };
 
+            private bool generateFirstHalfRail { get; set; }
+            private bool generateSecondHalfRail { get; set; }
 
-            public StraightRailSegment(Vector2 fromPosition, Vector2 toPosition)
+            public StraightRailSegment(Vector2 fromPosition, Vector2 toPosition, bool firstHalfRail = true, bool secondHalfRail = true)
             {
+                generateFirstHalfRail = firstHalfRail;
+                generateSecondHalfRail = secondHalfRail;
+
                 FromPosition = fromPosition;
                 EndPosition = toPosition;
 
@@ -344,7 +361,7 @@ namespace factorioLanguage
                 }
             }
 
-            private static List<JsonClasses.Entity> MakeRail(Vector2 at, ConnectionDirection direction)
+            private List<JsonClasses.Entity> MakeRail(Vector2 at, ConnectionDirection direction)
             {
                 if (direction == ConnectionDirection.Horizontal || direction == ConnectionDirection.Vertical)
                 {
@@ -358,35 +375,51 @@ namespace factorioLanguage
                 //Diagonals have to generate two rails
                 else if (direction == ConnectionDirection.Diagonal)
                 {
-                    var railDown = new JsonClasses.Entity();
-                    railDown.direction = (int)RailDirection.FrontDiagonalDown;
-                    railDown.position = at;
-                    railDown.entity_number = EntityIds.GenerateId();
-                    railDown.name = "straight-rail";
+                    var entities = new List<JsonClasses.Entity>();
+                    if (generateFirstHalfRail)
+                    {
+                        var railUp = new JsonClasses.Entity();
+                        railUp.direction = (int)RailDirection.FrontDiagonalUp;
+                        railUp.position = at + new Vector2(0, 2);
+                        railUp.entity_number = EntityIds.GenerateId();
+                        railUp.name = "straight-rail";
+                        entities.Add(railUp);
+                    }
 
+                    if (generateSecondHalfRail)
+                    {
+                        var railDown = new JsonClasses.Entity();
+                        railDown.direction = (int)RailDirection.FrontDiagonalDown;
+                        railDown.position = at;
+                        railDown.entity_number = EntityIds.GenerateId();
+                        railDown.name = "straight-rail";
+                        entities.Add(railDown);
+                    }
 
-                    var railUp = new JsonClasses.Entity();
-                    railUp.direction = (int)RailDirection.FrontDiagonalUp;
-                    railUp.position = at + new Vector2(0, 2);
-                    railUp.entity_number = EntityIds.GenerateId();
-                    railUp.name = "straight-rail";
-                    return new List<JsonClasses.Entity> { railDown, railUp };
+                    return entities;
                 }
                 else
                 {
-                    var railUp = new JsonClasses.Entity();
-                    railUp.direction = (int)RailDirection.BackDiagonalUp;
-                    railUp.position = at;
-                    railUp.entity_number = EntityIds.GenerateId();
-                    railUp.name = "straight-rail";
-
-
-                    var railDown = new JsonClasses.Entity();
-                    railDown.direction = (int)RailDirection.BackDiagonalDown;
-                    railDown.position = at + new Vector2(0, -2);
-                    railDown.entity_number = EntityIds.GenerateId();
-                    railDown.name = "straight-rail";
-                    return new List<JsonClasses.Entity> { railUp, railDown };
+                    var entities = new List<JsonClasses.Entity>();
+                    if (generateFirstHalfRail)
+                    {
+                        var railUp = new JsonClasses.Entity();
+                        railUp.direction = (int)RailDirection.BackDiagonalUp;
+                        railUp.position = at;
+                        railUp.entity_number = EntityIds.GenerateId();
+                        railUp.name = "straight-rail";
+                        entities.Add(railUp);
+                    }
+                    if (generateSecondHalfRail)
+                    {
+                        var railDown = new JsonClasses.Entity();
+                        railDown.direction = (int)RailDirection.BackDiagonalDown;
+                        railDown.position = at + new Vector2(0, -2);
+                        railDown.entity_number = EntityIds.GenerateId();
+                        railDown.name = "straight-rail";
+                        entities.Add(railDown);
+                    }
+                    return entities;
                 }
             }
 
@@ -671,15 +704,15 @@ namespace factorioLanguage
                     };
 
                     Vector2 startPos = new Vector2(30, 0);
-                    for (int i = 360; i > 180; i -= 45)
+                    for (int i = 360; i > 0; i -= 45)
                     {
                         var rail = new CurvedRailSegment(startPos, i, TurnDirection.Counterclockwise);
-                        entities.Add(rail.MakeEntity());
+                        entities.AddRange(rail.GetRailEntities());
                         startPos = rail.EndPosition;
                     }
 
                     startPos = new Vector2(0, 0);
-                    for (int i = 0; i < 180; i += 45)
+                    for (int i = 0; i < 360; i += 45)
                     {
                         var rail = new CurvedRailSegment(startPos, i, TurnDirection.Clockwise);
                         entities.Add(rail.MakeEntity());
@@ -783,7 +816,44 @@ namespace factorioLanguage
                 return BlueprintProcessor.MakeBlueprintString(fb);
             }
 
+            public static string ExportEntities(List<Entity> entities)
+            {
+                JsonClasses.FactorioBlueprint fb = new JsonClasses.FactorioBlueprint();
+                fb.blueprint = new JsonClasses.Blueprint();
+                fb.blueprint.label = "one way rail";
+                fb.blueprint.version = 64426475521;
+                fb.blueprint.item = "blueprint";
+                fb.blueprint.icons = new List<JsonClasses.Icon> {
+                    new JsonClasses.Icon
+                    {
+                        signal = new JsonClasses.Signal
+                        {
+                            type = "item",
+                            name = "rail"
+                        },
+                        index = 1
+                    }
+                };
 
+                fb.blueprint.entities = entities;
+
+                return BlueprintProcessor.MakeBlueprintString(fb);
+            }
+
+            public static string TestClockwiseShit()
+            {
+                List<Entity> entities = new List<Entity>();
+                var position = Vector2.Zero;
+                var increment = new Vector2(12, 0);
+                for (int i = 0; i < 360; i += 45)
+                {
+                    position += increment;
+                    entities.AddRange(new CurvedRailSegment(position, i, TurnDirection.Clockwise).GetRailEntities());
+                    entities.AddRange(new CurvedRailSegment(position, i, TurnDirection.Counterclockwise).GetRailEntities());
+                }
+
+                return ExportEntities(entities);
+            }
 
 
         }
