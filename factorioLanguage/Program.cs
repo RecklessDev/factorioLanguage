@@ -174,62 +174,14 @@ namespace factorioLanguage
 
     class Program
     {
-
-        static void CircuitTest()
-        {
-            //new ConstantCombinator
-            //{
-            //    Signals = new List<Signal>
-            //    {
-            //         new Signal
-            //        {
-            //            Name = "Signal-0",
-            //            Count = 1
-            //        }
-            //    }
-            //};
-
-            //new ArithmeticCombinator
-            //{
-            //    First = new Signal
-            //    {
-            //        Name = "Signal-0",
-            //        Count = 1
-            //    },
-            //    Second = new Signal
-            //    {
-            //        Name = "Constant",
-            //        Count = 5
-            //    },
-            //    Operation = "+"
-            //};
-        }
-
-
-
         static void Main(string[] args)
         {
-            //Write the json for the original blueprint
-            //File.WriteAllText("original.json", BlueprintProcessor.JsonPrettify(BlueprintProcessor.BlueprintToJson(BlueprintStrings.blueprint)));
-
-
-            //var fb = BlueprintProcessor.ReadBlueprint(BlueprintStrings.blueprint);
-
-            //string processedBS = BlueprintProcessor.MakeBlueprintString(fb);
-            ////Write the json for the processed blueprint
-            //File.WriteAllText("processed.json", BlueprintProcessor.JsonPrettify(BlueprintProcessor.BlueprintToJson(processedBS)));
-
-
-            //var railBp = "0eNqN0e0KgyAUBuB7Ob8NylkDb2WM0cehHSgLtSjCe58ZxMYa6+fR930UzgJFM2CvSVmQC1DZKQPytoChWuXNembnHkECWWyBgcrbddI5NeAYkKpwApm4OwNUlizh1g/D/FBDW6D2gb1ZDnrEKgoAg74zvtOp9aEpxGaQUeLlijSW29XFsS+Q76Cx3qqf9gfJN5J/kvyAvJwlxWlSnCWj7ZvxfzI9S8bHol9UWKV82zyDEbUJgUwInolrmvLEuRcjMLNV";
-            //var allDirBp = "0eNqV0uGKwyAMAOB3yW8d09UNfJUxRteFLdCmRd24Unz3s7aM663H3f0zmnxK4gCX+oGdIw5gB6CqZQ/2OICnG5f1uBf6DsECBWxAAJfNGLmSaogCiK/4AVbFkwDkQIFwqs9Bf+ZHc0GXEl6VPqTa2z3ITAjoWp+qWh6vSpLUAnqw22RfyWE1Hako3kj9V3K7JpoVcfc/Uf/+xmLRMFndS2I5t/Zd3ZjsyrRY0rsV2izpn1CpZlV9Rw/jzPJU7ZdPIOCJzueEfVHofXEwRqsYPwH67LXv";
-            var multidiag = "0eNqV0ksKgzAQBuC7zDpdRBOtuUopxepQBjRKjKUiuXuj0lJtFroKecyXH2ZGuFc9toa0BTUCFY3uQF1G6Oih82o6s0OLoIAs1sBA5/W0MzlV4BiQLvEFirsrA9SWLOFSP2+Gm+7rOxr/4FtZ9OaJ5WkGGLRN52saPX3knZNkMPiFc2+XZLBYLhPH/shoHxmHxTggxjtDcr6Yck3yACn2kdkHDBDyWKp4HUoExORIqI0nA156qLnZGkwD4PlIazdeNI3iPKzqZ7YZPNF0yywJESUilTLizr0BnRT8aw==";
+            var multidiag = "0eNqN0NsKgzAMBuB3yXW9sPMAfZUxhofgAhqlrTKRvvvaCrIxB7tMm/9LyAZ1P+OkiS2oDagZ2YC6bmCo46oPb3adEBSQxQEEcDWESlfUgxNA3OITVOpuApAtWcI9H4v1zvNQo/YNR7KZ9YJtEgEB02h8ZuQwyDuJ71sDJ6Aljc3+lTvxBcr/wFOvOPEuh2esp7qH/bWijGT2SZbhAPFE6u2iAhbUZp+ZZbLIyjyXqXMvykl7gA==";
             File.WriteAllText("rails.json", BlueprintProcessor.JsonPrettify(BlueprintProcessor.BlueprintToJson(multidiag)));
 
-
             //Rail Factory
-            
-            File.WriteAllText("oneway.txt", Rails.RailFactory.RailBlueprintToBlueprint(Rails.RailFactory.MultiWay(20)));
-            File.WriteAllText("curvedRails.txt", Rails.RailFactory.TestCurvedRails());
+            //File.WriteAllText("TestTurnSegment.txt", (Rails.RailFactory.TestTurnSegment()));
+            File.WriteAllText("TestCurvedRails.txt", (Rails.RailFactory.TestCurvedRails()));
         }
     }
 }

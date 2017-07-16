@@ -45,8 +45,8 @@ namespace factorioLanguage
 
             public static Vector2 Rotate(this Vector2 v, float degrees)
             {
-                var sin = Math.Sin(degrees * Math.PI * 180);
-                var cos = Math.Cos(degrees * Math.PI * 180);
+                var sin = Math.Sin(degrees * (Math.PI / 180));
+                var cos = Math.Cos(degrees * (Math.PI / 180));
 
                 float tx = v.X;
                 float ty = v.Y;
@@ -98,12 +98,21 @@ namespace factorioLanguage
             };
 
 
-            public TurnRailSegment(Vector2 startPosition, int startAngle, int endAngle)
+            public static List<IRailSegment> XTurnRailSegment(Vector2 startPosition, int startAngle, int endAngle)
             {
-                for (int i = startAngle + 45; i <= endAngle; i+=45)
+                List<IRailSegment> segments = new List<IRailSegment>();
+
+                var theta = Math.Abs(startAngle - endAngle);
+                var direction = startAngle > endAngle ? TurnDirection.Clockwise : TurnDirection.Counterclockwise;
+                for (int i = startAngle; i <= theta; i+=45)
                 {
-                    //new CurvedRailSegment(startPosition, )
+                    var curvedRail = new CurvedRailSegment(startPosition, i, direction);
+                    startPosition = curvedRail.EndPosition;
+
+                    segments.Add(curvedRail);
                 }
+
+                return segments;
             }
 
             public Vector2 EndPosition
@@ -171,7 +180,7 @@ namespace factorioLanguage
                 {180, Tuple.Create(new Vector2(-5, -1), new Vector2(-8, -4)) },
                 {225, Tuple.Create(new Vector2(-3, -3), new Vector2(-4, -8)) },
                 {270, Tuple.Create(new Vector2(1, -5), new Vector2(4, -8)) },
-                {315, Tuple.Create(new Vector2(3, -3), new Vector2(4, -8)) }
+                {315, Tuple.Create(new Vector2(3, -3), new Vector2(8, -4)) }
             };
 
             private static Dictionary<int, CurvedRailDirection> angleToDirection = new Dictionary<int, CurvedRailDirection>()
@@ -185,20 +194,6 @@ namespace factorioLanguage
                 { 270, CurvedRailDirection.From270To315Degrees },
                 { 315, CurvedRailDirection.From315To360Degrees }
             };
-
-            Tuple<Vector2, Vector2> GetOffset(int fromAngle, TurnDirection direction)
-            {
-                if (direction == TurnDirection.Clockwise)
-                    return angleTurnOffsets[fromAngle];
-                else
-                {
-                    var newAngle = (fromAngle - 45) % 360;
-                    if (newAngle < 0) newAngle += 360;
-                    
-                    var offsets = angleTurnOffsets[newAngle];
-                    return Tuple.Create(Vector2.Multiply(offsets.Item1, -1), Vector2.Multiply(offsets.Item2, -1));
-                }
-            }
 
             public CurvedRailSegment(Vector2 startPos, int angle) : this(startPos, degreesFromZero.Single(x => x.Value == angle).Key)
             {
@@ -217,15 +212,26 @@ namespace factorioLanguage
                 Direction = direction;
             }
 
+            private int normalizeAngle(int angle)
+            {
+                var newAngle = angle % 360;
+                if (newAngle < 0) newAngle += 360;
+                return newAngle;
+            }
+
             public CurvedRailSegment(Vector2 startPos, int startAngle, TurnDirection direction)
             {
+                startAngle = normalizeAngle(startAngle);
                 Tuple<Vector2, Vector2> offsetTuple;
-
                 {
                     if (direction == TurnDirection.Clockwise)
                     {
                         Direction = angleToDirection[startAngle];
                         offsetTuple = angleTurnOffsets[startAngle];
+
+                        FromPosition = startPos;
+                        Center = startPos + offsetTuple.Item1;
+                        EndPosition = startPos + offsetTuple.Item2;
                     }
                     else
                     {
@@ -233,15 +239,15 @@ namespace factorioLanguage
                         if (newAngle < 0) newAngle += 360;
 
                         var offsets = angleTurnOffsets[newAngle];
-                        offsetTuple = Tuple.Create(Vector2.Multiply(offsets.Item1, -1), Vector2.Multiply(offsets.Item2, -1));
+                        offsetTuple = Tuple.Create(Vector2.Multiply(offsets.Item2 - offsets.Item1, -1), Vector2.Multiply(offsets.Item2, -1));
 
                         Direction = angleToDirection[newAngle];
+
+                        FromPosition = startPos;
+                        Center = startPos + offsetTuple.Item1;
+                        EndPosition = startPos + offsetTuple.Item2;
                     }
                 }
-
-                FromPosition = startPos;
-                Center = startPos + offsetTuple.Item1;
-                EndPosition = startPos + offsetTuple.Item2;
             }
 
             //Rails that end on horizontal or vertical can be one segment shorter so this function fixes that; it should be added in the hardcoded values
@@ -655,10 +661,6 @@ namespace factorioLanguage
                 return rb;
             }
 
-
-
-
-
             public static string TestCurvedRails()
             {
                 List<JsonClasses.Entity> entities = new List<JsonClasses.Entity>();
@@ -668,10 +670,18 @@ namespace factorioLanguage
 
                     };
 
-                    Vector2 startPos = new Vector2(0, 0);
-                    for (int i = 360; i > 0; i -= 45)
+                    Vector2 startPos = new Vector2(30, 0);
+                    for (int i = 360; i > 180; i -= 45)
                     {
-                        var rail = new CurvedRailSegment(startPos, i, TurnDirection.Counterclockwise);                        
+                        var rail = new CurvedRailSegment(startPos, i, TurnDirection.Counterclockwise);
+                        entities.Add(rail.MakeEntity());
+                        startPos = rail.EndPosition;
+                    }
+
+                    startPos = new Vector2(0, 0);
+                    for (int i = 0; i < 180; i += 45)
+                    {
+                        var rail = new CurvedRailSegment(startPos, i, TurnDirection.Clockwise);
                         entities.Add(rail.MakeEntity());
                         startPos = rail.EndPosition;
                     }
@@ -699,11 +709,79 @@ namespace factorioLanguage
                 return BlueprintProcessor.MakeBlueprintString(fb);
             }
 
+            private static Vector2 GetStartPoint(Vector2 position, int angle, TurnDirection direction)
+            {
+                if (direction == TurnDirection.Counterclockwise)
+                    return position;
 
+                return position + new Vector2(2, 0).Rotate(angle);
 
+            }
 
+            public static string TestTurnSegment()
+            {
+                List<JsonClasses.Entity> entities = new List<JsonClasses.Entity>();
+                {
+                    //TurnRailSegment.XTurnRailSegment(Vector2.Zero, 0, 180).ForEach(segment => entities.AddRange(segment.GetRailEntities()));
 
+                    
+                    //for (int i = 45; i < 360; i+=90)
+                    //{
+                    //    var point = new Vector2(i / 10 * 2, 0);
 
+                    //    //var i = 225;
+                    //    entities.AddRange(new CurvedRailSegment(GetStartPoint(point, i, TurnDirection.Clockwise),
+                    //        i, TurnDirection.Clockwise).GetRailEntities());
+                    //    entities.AddRange(new CurvedRailSegment(GetStartPoint(point, i, TurnDirection.Counterclockwise),
+                    //        i, TurnDirection.Counterclockwise).GetRailEntities());
+                    //}
+
+                    var useAngle = 0;
+                    var usePoint = Vector2.Zero;
+                    
+
+                    useAngle = 45;
+                    usePoint = new Vector2(useAngle / 10 * 2, 0);
+                    entities.AddRange(new CurvedRailSegment(usePoint, useAngle, TurnDirection.Clockwise).GetRailEntities());
+                    entities.AddRange(new CurvedRailSegment(usePoint + new Vector2(2, 0), useAngle, TurnDirection.Counterclockwise).GetRailEntities());
+
+                    useAngle = 135;
+                    usePoint = new Vector2(useAngle / 10 * 2, 0);
+                    entities.AddRange(new CurvedRailSegment(usePoint, useAngle, TurnDirection.Clockwise).GetRailEntities());
+                    entities.AddRange(new CurvedRailSegment(usePoint + new Vector2(2, 0), useAngle, TurnDirection.Counterclockwise).GetRailEntities());
+
+                    useAngle = 225;
+                    usePoint = new Vector2(useAngle / 10 * 2, 0);
+                    entities.AddRange(new CurvedRailSegment(usePoint + new Vector2(2, 0), useAngle, TurnDirection.Clockwise).GetRailEntities());
+                    entities.AddRange(new CurvedRailSegment(usePoint, useAngle, TurnDirection.Counterclockwise).GetRailEntities());
+
+                    useAngle = 315;
+                    usePoint = new Vector2(useAngle / 10 * 2, 0);
+                    entities.AddRange(new CurvedRailSegment(usePoint + new Vector2(2, 0), useAngle, TurnDirection.Clockwise).GetRailEntities());
+                    entities.AddRange(new CurvedRailSegment(usePoint, useAngle, TurnDirection.Counterclockwise).GetRailEntities());
+                }
+
+                JsonClasses.FactorioBlueprint fb = new JsonClasses.FactorioBlueprint();
+                fb.blueprint = new JsonClasses.Blueprint();
+                fb.blueprint.label = "one way rail";
+                fb.blueprint.version = 64426475521;
+                fb.blueprint.item = "blueprint";
+                fb.blueprint.icons = new List<JsonClasses.Icon> {
+                    new JsonClasses.Icon
+                    {
+                        signal = new JsonClasses.Signal
+                        {
+                            type = "item",
+                            name = "rail"
+                        },
+                        index = 1
+                    }
+                };
+
+                fb.blueprint.entities = entities;
+
+                return BlueprintProcessor.MakeBlueprintString(fb);
+            }
 
 
 
