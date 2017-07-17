@@ -132,7 +132,7 @@ namespace Factorio.Rail
     }
 
     [Flags]
-    enum RailFlags
+    enum RailFlags2
     {
         Horizontal = 1,
         Vertical = 2,
@@ -148,17 +148,26 @@ namespace Factorio.Rail
     }
 
     [Flags]
-    enum RailDirection
+    enum RailFlags
     {
-        None = 0,
-        Direction0 = 1,
-        Direction1 = 2,
-        Direction2 = 4,
-        Direction3 = 8,
-        Direction4 = 16,
-        Direction5 = 32,
-        Direction6 = 64,
-        Direction7 = 128
+        Diagonal = 1,
+        ClockwiseTurn = 1,
+        Horizontal = 2,
+        BackRail = 4,
+        FirstHalfSquare = 4,
+        IsCurvedRail = 16,
+        //Up to here are the main flags - bellow are combinations to make things more readable
+        DiagonalUp = FirstHalfSquare | Horizontal | Diagonal,
+        DiagonalDown = SecondHalfSquare | Horizontal | Diagonal,
+        BackDiagonalUp = SecondHalfSquare | Vertical | Diagonal,
+        BackDiagonalDown = FirstHalfSquare | Vertical | Diagonal,
+        Back = BackRail,
+        Clockwise = ClockwiseTurn | IsCurvedRail,
+        CounterClockwise = IsCurvedRail,
+        //This is barely so the definition is readable - they don't do anything at all
+        Vertical = 0,
+        SecondHalfSquare = 0,
+        Front = 0
     }
 
     struct RailPiece
@@ -169,18 +178,20 @@ namespace Factorio.Rail
             
         }
 
-        bool IsClockwiseTurn(RailFlags flags)
+        public static bool IsCurvedRail(RailFlags flags)
         {
-            return (flags & RailFlags.Clockwise) != 0;
+            return (flags & RailFlags.IsCurvedRail) != 0;
         }
 
         public static int Direction(RailFlags flags)
         {
             //This would had been shorter in C++
-            return
-                (((flags & RailFlags.Clockwise) != 0) ? 1 : 0) | 
-                (((flags & RailFlags.Horizontal) != 0) ? 2 : 0) | 
-                (((flags & RailFlags.Back) != 0) ? 4 : 0);
+            //return
+            //    (((flags & RailFlags.Clockwise) != 0) ? 1 : 0) | 
+            //    (((flags & RailFlags.Horizontal) != 0) ? 2 : 0) | 
+            //    (((flags & RailFlags.Back) != 0) ? 4 : 0);
+
+            return (int)flags & ~(1 << 4);
         }
 
     }
