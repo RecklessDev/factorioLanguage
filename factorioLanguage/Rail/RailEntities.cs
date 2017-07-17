@@ -14,124 +14,54 @@ namespace Internal
 
 namespace Factorio.Rail
 {
-
-    public class RailDefinition
+    enum SquareSides
     {
-        Dictionary<int, ConnectionType> incomingConnections = new Dictionary<int, ConnectionType>()
+        Up = 1,
+        Right = 2,
+        Down = 4,
+        Left = 8
+    }
+
+
+    //A 2x2 square to be used by the rail system
+    class Matcher
+    {
+        public Matcher(SquareSides connections)
         {
-            {45, ConnectionType.HalfUp },
-            {135, ConnectionType.HalfUp },
-            {225, ConnectionType.HalfDown },
-            {315,  ConnectionType.HalfDown}
-        };
-
-        Dictionary<int, ConnectionType> outgoingConnections = new Dictionary<int, ConnectionType>()
-        {
-            {45, ConnectionType.HalfDown },
-            {135, ConnectionType.HalfDown },
-            {225, ConnectionType.HalfUp },
-            {315,  ConnectionType.HalfUp}
-        };
-
-        public RailDefinition(int inputAngle, int outputAngle)
-        {
-            InputAngle = inputAngle;
-            OutputAngle = outputAngle;
-
-            InputConnection = incomingConnections.SingleOrDefault(x => x.Key == InputAngle).Value;
-            OutputConnection = outgoingConnections.SingleOrDefault(x => x.Key == OutputAngle).Value;
-        }
-
-        public int InputAngle { get; private set; }
-        public int OutputAngle { get; private set; }
-
-        ConnectionType InputConnection { get; set; }
-        ConnectionType OutputConnection { get; set; }
-    }
-
-    class Rail
-    {
-        
-
-        public Vector2 Position { get; private set; }
-
-        public RailDefinition Definition { get; private set; }
-
-    }
-
-    interface IRail
-    {
-        Vector2 Position { get; }
-
-        //Vector2 Orientation { get; }
-    }
-     
-    class StraightRail : IRail
-    {
-        public Vector2 Position { get; set; }
-    }
-
-    class DiagonalRailDown : IRail
-    {
-        public Vector2 Position { get; set; }
-    }
-
-    class DiagonalRailUp : IRail
-    {
-        public Vector2 Position { get; set; }
-    }
-
-    class CurvedRail : IRail
-    {
-        public Vector2 Position { get; set; }
-
-        public CurvedRail()
-        {
-            Vector2 startPoint = new Vector2(0, 0);
-            Connection startDirection;
-            Connection endDirection;
-
-
-        }
-    }
-
-
-    enum Side
-    {
-        Up,
-        Right,
-        Down,
-        Left
-    }
-
-    enum ConnectionType
-    {
-        Full,
-        HalfUp,
-        HalfDown
-    }
-
-    class Connection
-    {
-        public Side Way { get; set; }
-
-        public ConnectionType Type  { get; set; }
-    }
-
-    class Square
-    {
-        public Square(SquareSides connections)
-        {
+            //Position = position;
             ConnectionPoints = connections;
         }
 
+        static Matcher()
+        {
+            HorizontalLeft = new Matcher(SquareSides.Left);
+            HorizontalRight = new Matcher(SquareSides.Right);
+            VerticalUp = new Matcher(SquareSides.Up);
+            VerticalDown = new Matcher(SquareSides.Down);
+            DiagonalUp = new Matcher(SquareSides.Left | SquareSides.Up);
+            DiagonalDown = new Matcher(SquareSides.Right | SquareSides.Down);
+            BackDiagonalUp = new Matcher(SquareSides.Right | SquareSides.Up);
+            BackDiagonalDown = new Matcher(SquareSides.Left | SquareSides.Down);
+        }
+
+        public static Matcher HorizontalLeft { get; private set; }
+        public static Matcher HorizontalRight { get; private set; }
+        public static Matcher VerticalUp { get; private set; }
+        public static Matcher VerticalDown { get; private set; }
+        public static Matcher DiagonalUp { get; private set; }
+        public static Matcher DiagonalDown { get; private set; }
+        public static Matcher BackDiagonalUp { get; private set; }
+        public static Matcher BackDiagonalDown { get; private set; }
+
+        //public Vector2 Position { get; private set; }
+
         SquareSides ConnectionPoints { get; set; }
 
-        public bool IsCompatible(Square other)
+        public bool IsCompatible(Matcher other)
         {
             if (IsDiagonal(ConnectionPoints))
                 return ((ConnectionPoints & other.ConnectionPoints) == 0); //both are diagonal and nothing matches
-            else return ConnectionPoints == other.ConnectionPoints;
+            else return ConnectionPoints == Reverse(other.ConnectionPoints);
         }
 
         private bool IsDiagonal(SquareSides sides)
@@ -146,19 +76,178 @@ namespace Factorio.Rail
         }
     }
 
-    enum SquareSides
+    class Connection
     {
-        Up = 1,
-        Right = 2,
-        Down = 4,
-        Left = 8
+        public Connection(Vector2 position, Matcher port)
+        {
+            Port = port;
+            Position = position;
+        }
+
+        public Matcher Port {get; private set; }
+        public Vector2 Position { get; private set; }
     }
+
+    enum AdvanceDirection
+    {
+        Continue,
+        TurnClockwise,
+        TurnCounterClockwise
+    }
+
+    
+
+    class Rail
+    {
+
+        public Rail(Connection input, Connection output)
+        {
+
+        }
+
+        public Rail Advance(Rail fromRail, AdvanceDirection direction)
+        {
+
+
+            return null;
+        }
+
+        static Rail()
+        {
+            new Rail(new Connection(Vector2.Zero, Matcher.HorizontalLeft), new Connection(new Vector2(2, 0), Matcher.HorizontalRight));
+        }
+
+        public Vector2 Center { get; private set; }
+
+        public Connection Input { get; private set; }
+
+        public Connection Output { get; private set; }
+    }
+
+ 
+    class Direction
+    {
+        Matcher Port { get; set; }
+        AdvanceDirection Target { get; set; }
+    }
+
+    [Flags]
+    enum RailFlags
+    {
+        Horizontal = 1,
+        Vertical = 2,
+        DiagonalUp = 4,
+        DiagonalDown = 8,
+        BackDiagonalUp = 16,
+        BackDiagonalDown = 32,
+        Front = 64,
+        Back = 128,
+        Clockwise = 256,
+        CounterClockwise = 512,
+
+    }
+
+    [Flags]
+    enum RailDirection
+    {
+        None = 0,
+        Direction0 = 1,
+        Direction1 = 2,
+        Direction2 = 4,
+        Direction3 = 8,
+        Direction4 = 16,
+        Direction5 = 32,
+        Direction6 = 64,
+        Direction7 = 128
+    }
+
+    struct RailPiece
+    {
+        
+        static RailPiece()
+        {
+            
+        }
+
+        bool IsClockwiseTurn(RailFlags flags)
+        {
+            return (flags & RailFlags.Clockwise) != 0;
+        }
+
+        public static int Direction(RailFlags flags)
+        {
+            //This would had been shorter in C++
+            return
+                (((flags & RailFlags.Clockwise) != 0) ? 1 : 0) | 
+                (((flags & RailFlags.Horizontal) != 0) ? 2 : 0) | 
+                (((flags & RailFlags.Back) != 0) ? 4 : 0);
+        }
+
+    }
+
 
     class Testing
     {
         public static void Test()
         {
-            new Square(SquareSides.Down | SquareSides.Right);
+            var HorizontalRail = RailFlags.Horizontal;
+            var HorizontalRailFrontClockwise = RailFlags.Horizontal | RailFlags.Clockwise | RailFlags.Front;
+            var HorizontalRailFrontCounterClockwise = RailFlags.Horizontal | RailFlags.CounterClockwise | RailFlags.Front;
+            var HorizontalRailBackClockwise = RailFlags.Horizontal | RailFlags.Clockwise | RailFlags.Back;
+            var HorizontalRailBackCounterClockwise = RailFlags.Horizontal | RailFlags.CounterClockwise | RailFlags.Back;
+
+            var VerticalRail = RailFlags.Vertical;
+            var VerticalRailFrontClockwise = RailFlags.Vertical | RailFlags.Clockwise | RailFlags.Front;
+            var VerticalRailFrontCounterClockwise = RailFlags.Vertical | RailFlags.CounterClockwise | RailFlags.Front;
+            var VerticalRailBackClockwise = RailFlags.Vertical | RailFlags.Clockwise | RailFlags.Back;
+            var VerticalRailBackCounterClockwise = RailFlags.Vertical | RailFlags.CounterClockwise | RailFlags.Back;
+
+            var DiagonalUpRail = RailFlags.DiagonalUp;
+            var DiagonalUpRailFrontClockwise = RailFlags.DiagonalUp | RailFlags.Clockwise | RailFlags.Front;
+            var DiagonalUpRailBackCounterClockwise = RailFlags.DiagonalUp | RailFlags.CounterClockwise | RailFlags.Back;
+            var DiagonalDownRail = RailFlags.DiagonalDown;
+            var DiagonalDownRailFrontCounterClockwise = RailFlags.DiagonalDown | RailFlags.CounterClockwise | RailFlags.Front;
+            var DiagonalDownRailBackClockwise = RailFlags.DiagonalDown | RailFlags.Clockwise | RailFlags.Back;
+
+            var BackDiagonalUpRail = RailFlags.BackDiagonalUp;
+            var BackDiagonalUpRailFrontCounterClockwise = RailFlags.BackDiagonalUp | RailFlags.CounterClockwise | RailFlags.Front;
+            var BackDiagonalUpRailBackClockwise = RailFlags.BackDiagonalUp | RailFlags.Clockwise | RailFlags.Back;
+            var BackDiagonalDownRail = RailFlags.BackDiagonalDown;
+            var BackDiagonalDownRailFrontClockwise = RailFlags.BackDiagonalDown | RailFlags.Clockwise | RailFlags.Front;
+            var BackDiagonalDownRailBackCounterClockwise = RailFlags.BackDiagonalDown | RailFlags.CounterClockwise | RailFlags.Back;
+
+            Dictionary<RailFlags, RailFlags> mapRailToOutputType = new Dictionary<RailFlags, RailFlags>
+            {
+                { HorizontalRail, RailFlags.Horizontal },
+                { HorizontalRailFrontClockwise, RailFlags.BackDiagonalUp },
+                { HorizontalRailFrontCounterClockwise, RailFlags.DiagonalDown },
+                { HorizontalRailBackClockwise, RailFlags.BackDiagonalDown },
+                { HorizontalRailBackCounterClockwise, RailFlags.DiagonalUp },
+
+                { VerticalRail, RailFlags.Vertical },
+                { VerticalRailFrontClockwise, RailFlags.DiagonalUp },
+                { VerticalRailFrontCounterClockwise, RailFlags.BackDiagonalUp },
+                { VerticalRailBackClockwise, RailFlags.DiagonalDown },
+                { VerticalRailBackCounterClockwise, RailFlags.BackDiagonalDown },
+
+                { DiagonalUpRail, RailFlags.DiagonalDown },
+                { DiagonalUpRailFrontClockwise, RailFlags.Horizontal },
+                { DiagonalUpRailBackCounterClockwise, RailFlags.Vertical },
+                { DiagonalDownRail, RailFlags.DiagonalUp },
+                { DiagonalDownRailFrontCounterClockwise, RailFlags.Vertical },
+                { DiagonalDownRailBackClockwise, RailFlags.Horizontal },
+
+                { BackDiagonalUpRail, RailFlags.DiagonalDown },
+                { BackDiagonalUpRailFrontCounterClockwise, RailFlags.Horizontal },
+                { BackDiagonalUpRailBackClockwise, RailFlags.Vertical },
+                { BackDiagonalDownRail, RailFlags.DiagonalUp },
+                { BackDiagonalDownRailFrontClockwise, RailFlags.Vertical },
+                { BackDiagonalDownRailBackCounterClockwise, RailFlags.Horizontal }
+            };
+
+
+
+
         }
     }
 }
